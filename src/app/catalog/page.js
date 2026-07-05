@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { suits } from '@/data/suits';
+import { useState, useEffect } from 'react';
+import { getCatalog } from '@/lib/supabase';
 import SuitCard from '@/components/SuitCard';
 import FilterBar from '@/components/FilterBar';
 import styles from './page.module.css';
@@ -15,7 +15,19 @@ const initialFilters = {
 };
 
 export default function CatalogPage() {
+  const [suits, setSuits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(initialFilters);
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      setLoading(true);
+      const data = await getCatalog();
+      setSuits(data);
+      setLoading(false);
+    };
+    loadCatalog();
+  }, []);
 
   const handleFilterChange = (category, newList) => {
     setFilters(prev => ({
@@ -58,9 +70,11 @@ export default function CatalogPage() {
           <p className={styles.subtitle}>
             ₹500 se ₹6000+ bridal tak — har occasion ke liye select premium styles.
           </p>
-          <div className={styles.stats}>
-            {filteredSuits.length} {filteredSuits.length === 1 ? 'Suit' : 'Suits'} Mile
-          </div>
+          {!loading && (
+            <div className={styles.stats}>
+              {filteredSuits.length} {filteredSuits.length === 1 ? 'Suit' : 'Suits'} Mile
+            </div>
+          )}
         </div>
 
         {/* Main Body Grid */}
@@ -72,7 +86,18 @@ export default function CatalogPage() {
           />
           
           <main className={styles.catalogMain}>
-            {filteredSuits.length > 0 ? (
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', width: '100%' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid #f3f3f3',
+                  borderTop: '3px solid var(--primary-pink)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+              </div>
+            ) : filteredSuits.length > 0 ? (
               <div className={styles.grid}>
                 {filteredSuits.map(suit => (
                   <SuitCard key={suit.id} suit={suit} />
@@ -94,3 +119,4 @@ export default function CatalogPage() {
     </div>
   );
 }
+

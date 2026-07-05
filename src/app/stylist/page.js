@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { suits } from '@/data/suits';
+import { getCatalog } from '@/lib/supabase';
 import SuitCard from '@/components/SuitCard';
 import styles from './page.module.css';
 
@@ -15,6 +15,8 @@ const steps = [
 ];
 
 export default function AIStylist() {
+  const [suits, setSuits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState({
     skinTone: '',
@@ -25,6 +27,16 @@ export default function AIStylist() {
     bottom: '',
     dupatta: ''
   });
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      setLoading(true);
+      const data = await getCatalog();
+      setSuits(data);
+      setLoading(false);
+    };
+    loadCatalog();
+  }, []);
 
   const skinToneOptions = [
     { label: 'Gori (Fair)', value: 'Gori', desc: 'Light & bright colors like soft pink, mint green, and pastels look stunning.', bg: '#FCE6DE' },
@@ -272,7 +284,18 @@ export default function AIStylist() {
 
               {/* Suits recommendations grid */}
               <h3 className={styles.gridHeading}>Suggested Designs:</h3>
-              {recommendedSuits.length > 0 ? (
+              {loading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid #f3f3f3',
+                    borderTop: '3px solid var(--primary-pink)',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                </div>
+              ) : recommendedSuits.length > 0 ? (
                 <div className={styles.resultGrid}>
                   {recommendedSuits.map(suit => (
                     <SuitCard key={suit.id} suit={suit} />

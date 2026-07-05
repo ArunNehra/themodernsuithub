@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { submitLead } from '@/lib/supabase';
 import styles from './page.module.css';
 
 export default function ContestTeaser() {
@@ -48,17 +49,22 @@ export default function ContestTeaser() {
 
     setIsSubmitting(true);
 
-    // Simulate Apps Script / Google Sheets API write delay
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const result = await submitLead(cleanPhone, 'Style Contest Launch Notify');
       
-      // Save locally to simulate database tracking
-      const leads = JSON.parse(localStorage.getItem('msh_contest_leads') || '[]');
-      leads.push({ phone, date: new Date().toISOString() });
-      localStorage.setItem('msh_contest_leads', JSON.stringify(leads));
-    }, 1200);
+      if (result.success) {
+        setIsSubmitted(true);
+      } else {
+        alert('Registration failed: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const prizes = [
     { rank: '👑 #1 Queen', reward: '50% Discount + Free Stitching', cond: 'Sabse Zyada Points' },

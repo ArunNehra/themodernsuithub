@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { supabase, uploadImage, getCatalog, addCatalogItem, completeOrder, updateUserCoins } from '@/lib/supabase';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -18,11 +19,12 @@ export default function AdminDashboard() {
   const [fabric, setFabric] = useState('Cotton');
   const [work, setWork] = useState('Print');
   const [coinsReward, setCoinsReward] = useState(150);
+  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  // Orders and Users state (synced with localStorage)
+  // Orders and Users state (synced with Supabase / localStorage fallback)
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
 
@@ -38,55 +40,90 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Check if already authorized
     const auth = localStorage.getItem('msh_admin_auth');
     if (auth === 'true') {
       setIsAuthorized(true);
     }
 
-    // Load mock database entries from localStorage
-    loadMockDatabase();
+    if (isAuthorized) {
+      loadMockDatabase();
+    }
   }, [isAuthorized]);
 
-  const loadMockDatabase = () => {
-    // Load local storage registered users
-    const userKeys = Object.keys(localStorage).filter(key => key.startsWith('msh_profile_'));
-    const loadedUsers = userKeys.map(key => JSON.parse(localStorage.getItem(key)));
-    setUsers(loadedUsers);
+  const loadMockDatabase = async () => {
+    if (!supabase) {
+      // Fallback: Load local storage registered users
+      const userKeys = Object.keys(localStorage).filter(key => key.startsWith('msh_profile_'));
+      const loadedUsers = userKeys.map(key => JSON.parse(localStorage.getItem(key)));
+      
+      // Map properties for UI naming compatibility
+      const compatibleUsers = loadedUsers.map(u => ({
+        name: u.name,
+        phone: u.phone,
+        coin_balance: u.coinBalance,
+        referral_code: u.referralCode,
+        history: u.history
+      }));
+      setUsers(compatibleUsers);
 
-    // Mock some sample orders if none exist
-    const storedOrders = localStorage.getItem('msh_orders');
-    if (storedOrders) {
-      setOrders(JSON.parse(storedOrders));
-    } else {
-      const sampleOrders = [
-        {
-          id: 'ORD-9482',
-          phone: '9876543210',
-          name: 'Priya Sharma',
-          suitId: 'MSH-001',
-          suitName: 'Bridal Maroon Zari Silk',
-          coinsUsed: 200,
-          coinsToEarn: 450,
-          total: '₹5,000',
-          status: 'Pending',
-          date: '2026-07-05'
-        },
-        {
-          id: 'ORD-3810',
-          phone: '8571911277',
-          name: 'Sonia Malik',
-          suitId: 'MSH-003',
-          suitName: 'Royal Blue Georgette Festival',
-          coinsUsed: 0,
-          coinsToEarn: 220,
-          total: '₹2,500',
-          status: 'Completed',
-          date: '2026-07-04'
-        }
-      ];
-      localStorage.setItem('msh_orders', JSON.stringify(sampleOrders));
-      setOrders(sampleOrders);
+      // Mock some sample orders if none exist
+      const storedOrders = localStorage.getItem('msh_orders');
+      if (storedOrders) {
+        const parsedOrders = JSON.parse(storedOrders);
+        const compatibleOrders = parsedOrders.map(o => ({
+          id: o.id,
+          phone: o.phone,
+          name: o.name || 'Test User',
+          suit_id: o.suitId || o.suit_id,
+          suit_name: o.suitName || o.suit_name,
+          coins_used: o.coinsUsed !== undefined ? o.coinsUsed : o.coins_used,
+          coins_to_earn: o.coinsToEarn !== undefined ? o.coinsToEarn : o.coins_to_earn,
+          total: o.total,
+          status: o.status,
+          date: o.date
+        }));
+        setOrders(compatibleOrders);
+      } else {
+        const sampleOrders = [
+          {
+            id: 'ORD-9482',
+            phone: '9876543210',
+            name: 'Priya Sharma',
+            suit_id: 'MSH-001',
+            suit_name: 'Bridal Maroon Zari Silk',
+            coins_used: 200,
+            coins_to_earn: 450,
+            total: '₹5,000',
+            status: 'Pending',
+            date: '2026-07-05'
+          }
+        ];
+        localStorage.setItem('msh_orders', JSON.stringify(sampleOrders));
+        setOrders(sampleOrders);
+      }
+      return;
+    }
+
+    try {
+      // Load users from Supabase
+      const { data: userData, error: userErr } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (userErr) throw userErr;
+      setUsers(userData || []);
+
+      // Load orders from Supabase
+      const { data: orderData, error: orderErr } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (orderErr) throw orderErr;
+      setOrders(orderData || []);
+    } catch (err) {
+      console.error('Error loading database from Supabase:', err);
     }
   };
 
@@ -97,7 +134,7 @@ export default function AdminDashboard() {
   };
 
   // Suit Uploader Submission
-  const handleSuitSubmit = (e) => {
+  const handleSuitSubmit = async (e) => {
     e.preventDefault();
     if (!suitName || !suitPrice) {
       alert('Kripya suit details fill karein.');
@@ -106,8 +143,13 @@ export default function AdminDashboard() {
 
     setIsUploading(true);
 
-    // Simulate image uploading to Firebase Storage + writing row to Google Sheet
-    setTimeout(() => {
+    try {
+      let imageUrl = '/demo/suit-placeholder.svg';
+      
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
       const newSuit = {
         id: `MSH-${String(Math.floor(Math.random() * 900) + 100)}`,
         name: suitName,
@@ -117,22 +159,26 @@ export default function AdminDashboard() {
         color,
         fabric,
         work,
-        image: imagePreview || '/demo/suit-placeholder.svg',
+        image: imageUrl,
         coinsReward: Number(coinsReward),
-        colorHex: '#C2185B'
+        colorHex: '#C2185B',
+        active: true
       };
 
-      // Add to local catalog storage
-      const localCatalog = JSON.parse(localStorage.getItem('msh_local_catalog') || '[]');
-      localCatalog.push(newSuit);
-      localStorage.setItem('msh_local_catalog', JSON.stringify(localCatalog));
-
+      const result = await addCatalogItem(newSuit);
+      if (result.success) {
+        setUploadSuccess(true);
+        resetSuitForm();
+        loadMockDatabase();
+        setTimeout(() => setUploadSuccess(false), 3000);
+      } else {
+        alert('Error adding suit: ' + result.error);
+      }
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    } finally {
       setIsUploading(false);
-      setUploadSuccess(true);
-      resetSuitForm();
-
-      setTimeout(() => setUploadSuccess(false), 3000);
-    }, 1500);
+    }
   };
 
   const resetSuitForm = () => {
@@ -140,11 +186,13 @@ export default function AdminDashboard() {
     setSuitPrice('');
     setCoinsReward(150);
     setImagePreview('');
+    setImageFile(null);
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -153,65 +201,98 @@ export default function AdminDashboard() {
     }
   };
 
-  // Complete Order & Credit/Debit coins logic
-  const handleCompleteOrder = (orderId) => {
-    const updatedOrders = orders.map(ord => {
-      if (ord.id === orderId && ord.status === 'Pending') {
-        // 1. Sync User Coins in LocalStorage
-        const userProfileKey = `msh_profile_${ord.phone}`;
-        const userProfile = JSON.parse(localStorage.getItem(userProfileKey));
-        
-        if (userProfile) {
-          const prevBalance = userProfile.coinBalance;
-          const newBalance = prevBalance - ord.coinsUsed + ord.coinsToEarn;
+  // Complete Order & Sync Coins
+  const handleCompleteOrder = async (orderId) => {
+    if (!supabase) {
+      // Fallback: LocalStorage coins sync
+      const updatedOrders = orders.map(ord => {
+        if (ord.id === orderId && ord.status === 'Pending') {
+          const userProfileKey = `msh_profile_${ord.phone}`;
+          const userProfile = JSON.parse(localStorage.getItem(userProfileKey));
           
-          userProfile.coinBalance = newBalance;
-          userProfile.history.push({
-            id: userProfile.history.length + 1,
-            type: 'debit',
-            amount: ord.coinsUsed,
-            desc: `Redeemed in Order ${ord.id}`,
-            date: new Date().toISOString().split('T')[0]
-          });
-          userProfile.history.push({
-            id: userProfile.history.length + 1,
-            type: 'credit',
-            amount: ord.coinsToEarn,
-            desc: `Reward for Order ${ord.id}`,
-            date: new Date().toISOString().split('T')[0]
-          });
+          if (userProfile) {
+            const prevBalance = userProfile.coinBalance;
+            const newBalance = prevBalance - ord.coins_used + ord.coins_to_earn;
+            
+            userProfile.coinBalance = newBalance;
+            userProfile.history.push({
+              id: userProfile.history.length + 1,
+              type: 'debit',
+              amount: ord.coins_used,
+              desc: `Redeemed in Order ${ord.id}`,
+              date: new Date().toISOString().split('T')[0]
+            });
+            userProfile.history.push({
+              id: userProfile.history.length + 1,
+              type: 'credit',
+              amount: ord.coins_to_earn,
+              desc: `Reward for Order ${ord.id}`,
+              date: new Date().toISOString().split('T')[0]
+            });
 
-          localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
+            localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
+          }
+          return { ...ord, status: 'Completed' };
         }
+        return ord;
+      });
 
-        // Return updated order status
-        return { ...ord, status: 'Completed' };
+      localStorage.setItem('msh_orders', JSON.stringify(updatedOrders));
+      setOrders(updatedOrders);
+      loadMockDatabase();
+      alert('Order completed! Local coins synced successfully.');
+      return;
+    }
+
+    try {
+      const result = await completeOrder(orderId);
+      if (result.success) {
+        loadMockDatabase();
+        alert('Order completed and user coins synced in Supabase!');
+      } else {
+        alert('Error completing order: ' + result.error);
       }
-      return ord;
-    });
-
-    localStorage.setItem('msh_orders', JSON.stringify(updatedOrders));
-    setOrders(updatedOrders);
-    loadMockDatabase(); // Reload counts
-
-    alert('Order mark completed! Customer coins updated automatically.');
+    } catch (err) {
+      alert('Order completion failed: ' + err.message);
+    }
   };
 
-  // Manual Coin adjuster
-  const adjustUserCoins = (phone, amount) => {
-    const key = `msh_profile_${phone}`;
-    const profile = JSON.parse(localStorage.getItem(key));
-    if (profile) {
-      profile.coinBalance = Math.max(0, profile.coinBalance + amount);
-      profile.history.push({
-        id: profile.history.length + 1,
-        type: amount > 0 ? 'credit' : 'debit',
-        amount: Math.abs(amount),
-        desc: `Admin Adjustment`,
-        date: new Date().toISOString().split('T')[0]
-      });
-      localStorage.setItem(key, JSON.stringify(profile));
-      loadMockDatabase();
+  // Manual Coin adjustment
+  const adjustUserCoins = async (phone, amount) => {
+    const user = users.find(u => u.phone === phone);
+    if (!user) return;
+
+    const newBalance = Math.max(0, user.coin_balance + amount);
+    const historyLog = {
+      id: (user.history || []).length + 1,
+      type: amount > 0 ? 'credit' : 'debit',
+      amount: Math.abs(amount),
+      desc: 'Admin Adjustment',
+      date: new Date().toISOString().split('T')[0]
+    };
+
+    if (!supabase) {
+      // Fallback
+      const key = `msh_profile_${phone}`;
+      const profile = JSON.parse(localStorage.getItem(key));
+      if (profile) {
+        profile.coinBalance = newBalance;
+        profile.history.push(historyLog);
+        localStorage.setItem(key, JSON.stringify(profile));
+        loadMockDatabase();
+      }
+      return;
+    }
+
+    try {
+      const result = await updateUserCoins(phone, newBalance, historyLog);
+      if (result.success) {
+        loadMockDatabase();
+      } else {
+        alert('Error adjusting coins: ' + result.error);
+      }
+    } catch (err) {
+      alert('Coin adjustment failed: ' + err.message);
     }
   };
 
@@ -278,11 +359,11 @@ export default function AdminDashboard() {
               {/* TAB 1: ADD NEW SUIT */}
               {activeTab === 'add-suit' && (
                 <div className={styles.suitUploadSection}>
-                  <h3>Upload New Suit to Google Sheet Catalog</h3>
+                  <h3>Upload New Suit to Supabase Storage & Catalog</h3>
                   
                   {uploadSuccess && (
                     <div className={styles.successMessage}>
-                      🎉 Suit Catalog mein successfully add ho gaya! (Data written to Catalog Google Sheet)
+                      🎉 Suit Catalog mein successfully add ho gaya! (Data written to Supabase table)
                     </div>
                   )}
 
@@ -389,7 +470,7 @@ export default function AdminDashboard() {
                         {imagePreview ? (
                           <div className={styles.previewBox}>
                             <Image src={imagePreview} alt="Preview" width={100} height={130} className={styles.uploadedPreview} />
-                            <button className={styles.removeImageBtn} onClick={() => setImagePreview('')} type="button">
+                            <button className={styles.removeImageBtn} onClick={() => { setImagePreview(''); setImageFile(null); }} type="button">
                               ✕ Remove
                             </button>
                           </div>
@@ -403,7 +484,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <button type="submit" className="btn btn-primary btn-large" disabled={isUploading} id="suit-submit-btn">
-                      {isUploading ? 'Uploading to Firebase Storage...' : 'Publish Suit to Shop 🚀'}
+                      {isUploading ? 'Uploading to Supabase Storage...' : 'Publish Suit to Shop 🚀'}
                     </button>
                   </form>
                 </div>
@@ -428,34 +509,42 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.map(order => (
-                          <tr key={order.id}>
-                            <td><strong>{order.id}</strong></td>
-                            <td>{order.name} <br /><span className={styles.subtext}>+{order.phone}</span></td>
-                            <td>{order.suitName} <br /><span className={styles.subtext}>{order.suitId}</span></td>
-                            <td>{order.total}</td>
-                            <td className={styles.redText}>-{order.coinsUsed}</td>
-                            <td className={styles.greenText}>+{order.coinsToEarn}</td>
-                            <td>
-                              <span className={`${styles.statusLabel} ${order.status === 'Completed' ? styles.statusSuccess : styles.statusPending}`}>
-                                {order.status}
-                              </span>
-                            </td>
-                            <td>
-                              {order.status === 'Pending' ? (
-                                <button 
-                                  className="btn btn-whatsapp" 
-                                  onClick={() => handleCompleteOrder(order.id)}
-                                  id={`complete-order-btn-${order.id}`}
-                                >
-                                  Complete & Add Coins ✅
-                                </button>
-                              ) : (
-                                <span className={styles.completedCheck}>✓ Confirmed</span>
-                              )}
+                        {orders.length > 0 ? (
+                          orders.map(order => (
+                            <tr key={order.id}>
+                              <td><strong>{order.id}</strong></td>
+                              <td>{order.name || 'User'} <br /><span className={styles.subtext}>+{order.phone}</span></td>
+                              <td>{order.suit_name} <br /><span className={styles.subtext}>{order.suit_id}</span></td>
+                              <td>{order.total}</td>
+                              <td className={styles.redText}>-{order.coins_used}</td>
+                              <td className={styles.greenText}>+{order.coins_to_earn}</td>
+                              <td>
+                                <span className={`${styles.statusLabel} ${order.status === 'Completed' ? styles.statusSuccess : styles.statusPending}`}>
+                                  {order.status}
+                                </span>
+                              </td>
+                              <td>
+                                {order.status === 'Pending' ? (
+                                  <button 
+                                    className="btn btn-whatsapp" 
+                                    onClick={() => handleCompleteOrder(order.id)}
+                                    id={`complete-order-btn-${order.id}`}
+                                  >
+                                    Complete & Add Coins ✅
+                                  </button>
+                                ) : (
+                                  <span className={styles.completedCheck}>✓ Confirmed</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="8" className={styles.noUsers}>
+                              Koi orders log nahi hain.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -483,8 +572,8 @@ export default function AdminDashboard() {
                             <tr key={user.phone}>
                               <td><strong>{user.name}</strong></td>
                               <td>+{user.phone}</td>
-                              <td><code>{user.referralCode}</code></td>
-                              <td className={styles.balanceValCol}>🪙 {user.coinBalance}</td>
+                              <td><code>{user.referral_code}</code></td>
+                              <td className={styles.balanceValCol}>🪙 {user.coin_balance}</td>
                               <td>
                                 <div className={styles.adjustBtns}>
                                   <button className="btn btn-secondary" onClick={() => adjustUserCoins(user.phone, 50)} id={`add-50-coins-${user.phone}`}>

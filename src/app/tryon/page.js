@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { suits } from '@/data/suits';
+import { getCatalog } from '@/lib/supabase';
 import styles from './page.module.css';
 
 function VirtualTryOnContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [suits, setSuits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSuit, setSelectedSuit] = useState(null);
   const [userPhoto, setUserPhoto] = useState(null);
   const [userPhotoPreview, setUserPhotoPreview] = useState('');
@@ -25,17 +27,24 @@ function VirtualTryOnContent() {
 
   const fileInputRef = useRef(null);
 
-  // Read suit ID from URL parameters if redirected from Catalog card
+  // Load catalog and determine initial selection
   useEffect(() => {
-    const suitId = searchParams.get('suit');
-    if (suitId) {
-      const match = suits.find(s => s.id === suitId);
-      if (match) {
-        setSelectedSuit(match);
+    const loadCatalog = async () => {
+      const data = await getCatalog();
+      setSuits(data);
+      
+      const suitId = searchParams.get('suit');
+      if (suitId) {
+        const match = data.find(s => s.id === suitId);
+        if (match) {
+          setSelectedSuit(match);
+        }
+      } else if (data.length > 0) {
+        setSelectedSuit(data[0]);
       }
-    } else if (suits.length > 0) {
-      setSelectedSuit(suits[0]);
-    }
+      setLoading(false);
+    };
+    loadCatalog();
   }, [searchParams]);
 
   const handlePhotoUpload = (e) => {
@@ -52,11 +61,36 @@ function VirtualTryOnContent() {
     }
   };
 
+
   const triggerFileInput = () => {
     fileInputRef.current.click();
   };
 
-  const runTryOn = () => {
+  // Helper to convert File to Base64
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+
+  // Helper to fetch remote image URL and convert to Base64
+  const urlToBase64 = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+    } catch (err) {
+      throw new Error('Image load failed: ' + err.message);
+    }
+  };
+
+  const runTryOn = async () => {
     if (!userPhoto) {
       alert('Kripya apni photo upload karein pehle.');
       return;
@@ -70,21 +104,43 @@ function VirtualTryOnContent() {
     setLoadingProgress(10);
     setIsFallback(false);
 
-    // Simulate Try-On loading states (Hugging Face ZeroGPU simulation)
-    // In real scenario, this connects to Gradio client or replicate endpoint.
-    // If it exceeds 6 seconds in our simulation, we trigger the fallback warning
-    const interval = setInterval(() => {
-      setLoadingProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          // Trigger fallback since it takes longer than 20 seconds / is busy
-          setIsProcessing(false);
-          setIsFallback(true);
-          return 90;
-        }
-        return prev + 15;
+    try {
+      setLoadingProgress(30);
+      
+      // Package images into FormData
+      const formData = new FormData();
+      formData.append('personImage', userPhoto);
+      formData.append('clothUrl', selectedSuit.image);
+
+      setLoadingProgress(55);
+      
+      // Call backend API route which runs server-side (CORS-free)
+      const response = await fetch('/api/tryon', {
+        method: 'POST',
+        body: formData
       });
-    }, 800);
+
+      setLoadingProgress(80);
+
+      if (!response.ok) {
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.error || `Server returned status ${response.status}`);
+      }
+
+      const json = await response.json();
+      setLoadingProgress(95);
+
+      if (json.success && json.image) {
+        setResultImage(json.image);
+      } else {
+        throw new Error('Invalid response structure');
+      }
+    } catch (err) {
+      console.warn('Free API Try-On failed, falling back to manual WhatsApp:', err);
+      setIsFallback(true);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Pre-filled WhatsApp link for manual processing fallback
@@ -146,17 +202,40 @@ function VirtualTryOnContent() {
                   <div className={styles.fallbackWrap}>
                     <span className={styles.fallbackIcon}>⚠️</span>
                     <h3>AI Server Busy hai!</h3>
-                    <p>
-                      Hamare free AI Try-On server par load zyada hai. Aapka look manually generate karne ke liye click karke WhatsApp par apni photo aur selected suit automatically bhej dein. Hum 2 minute mein look generate karke wapas bhej denge!
+                    <p style={{ marginBottom: '10px' }}>
+                      Hamare free AI Try-On server par load zyada hai. Lekin hum aapka look manually generate karke bhej denge!
                     </p>
+                    
+                    <div className={styles.instructionsBox} style={{
+                      textAlign: 'left',
+                      backgroundColor: 'rgba(194, 24, 91, 0.03)',
+                      border: '1px dashed rgba(194, 24, 91, 0.2)',
+                      padding: '16px 20px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      lineHeight: '1.6',
+                      color: '#444',
+                      width: '100%',
+                      marginBottom: '20px'
+                    }}>
+                      <strong style={{ display: 'block', fontSize: '13px', color: 'var(--primary-pink)', marginBottom: '8px' }}>
+                        Aapko Kya Karna Hai? (2 Aasan Steps):
+                      </strong>
+                      <ol style={{ paddingLeft: '16px', margin: '0' }}>
+                        <li style={{ marginBottom: '6px' }}>Niche <strong>"WhatsApp Pe Open Karein"</strong> par click karein. Chat open hote hi predefined text automatically type ho jayega.</li>
+                        <li>Apni chat window mein attach (📎) ya camera icon par click karke <strong>apni photo select karke send kar dein</strong>.</li>
+                      </ol>
+                    </div>
+
                     <a 
                       href={getWhatsAppFallbackLink()} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="btn btn-whatsapp anim-pulse"
                       id="tryon-whatsapp-fallback-btn"
+                      style={{ width: '100%' }}
                     >
-                      WhatsApp Pe Look Mangwayein 💬
+                      WhatsApp Pe Open Karein 💬
                     </a>
                     <button 
                       className={styles.retryBtn} 
@@ -203,19 +282,36 @@ function VirtualTryOnContent() {
             <div className={styles.sectionGroup}>
               <h3>1. Suit Select Chunein</h3>
               <div className={styles.suitGrid}>
-                {suits.map(suit => (
-                  <button
-                    key={suit.id}
-                    className={`${styles.suitThumbBtn} ${selectedSuit?.id === suit.id ? styles.selectedThumb : ''}`}
-                    onClick={() => setSelectedSuit(suit)}
-                    type="button"
-                    id={`tryon-select-suit-${suit.id}`}
-                  >
-                    <div className={styles.thumbAccent} style={{ backgroundColor: `${suit.colorHex}20` }} />
-                    <Image src={suit.image} alt={suit.name} width={50} height={60} className={styles.thumbImg} />
-                    <span className={styles.thumbName}>{suit.name}</span>
-                  </button>
-                ))}
+                {loading ? (
+                  <div style={{ gridColumn: 'span 4', display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      border: '2px solid #f3f3f3',
+                      borderTop: '2px solid var(--primary-pink)',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                  </div>
+                ) : suits.length > 0 ? (
+                  suits.map(suit => (
+                    <button
+                      key={suit.id}
+                      className={`${styles.suitThumbBtn} ${selectedSuit?.id === suit.id ? styles.selectedThumb : ''}`}
+                      onClick={() => setSelectedSuit(suit)}
+                      type="button"
+                      id={`tryon-select-suit-${suit.id}`}
+                    >
+                      <div className={styles.thumbAccent} style={{ backgroundColor: `${suit.colorHex}20` }} />
+                      <Image src={suit.image} alt={suit.name} width={50} height={60} className={styles.thumbImg} />
+                      <span className={styles.thumbName}>{suit.name}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div style={{ gridColumn: 'span 4', fontSize: '12px', color: '#777', textAlign: 'center', padding: '10px 0' }}>
+                    No suits available.
+                  </div>
+                )}
               </div>
             </div>
 

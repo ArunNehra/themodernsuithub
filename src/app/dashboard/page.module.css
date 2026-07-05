@@ -1,0 +1,406 @@
+.page {
+  padding: 60px 0 100px;
+  background-color: #fbfbfb;
+  min-height: calc(100vh - 80px);
+}
+
+/* 1. Login card */
+.loginCard {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 40px 30px;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loginIcon {
+  font-size: 50px;
+  background-color: var(--light-pink);
+  width: 90px;
+  height: 90px;
+  line-height: 90px;
+  border-radius: 50%;
+}
+
+.loginHeader h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.loginHeader p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #777;
+}
+
+.inputGroup input {
+  padding: 14px;
+  border: 2px solid #efefef;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  background-color: var(--white);
+  transition: var(--transition-smooth);
+}
+
+.inputGroup input:focus {
+  border-color: var(--primary-pink);
+}
+
+/* 2. Dashboard Container */
+.dashboardContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.dashboardHeader {
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .dashboardHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .userInfo {
+    flex-direction: column;
+  }
+}
+
+.userAvatar {
+  font-size: 40px;
+  background-color: var(--light-pink);
+  width: 70px;
+  height: 70px;
+  line-height: 70px;
+  border-radius: 50%;
+  text-align: center;
+  display: inline-block;
+}
+
+.userInfo h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.userInfo p {
+  font-size: 13px;
+  color: #777;
+}
+
+.balanceBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: linear-gradient(135deg, var(--light-pink) 0%, #fff 100%);
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .balanceBox {
+    align-items: center;
+    width: 100%;
+  }
+}
+
+.balanceLabel {
+  font-size: 13px;
+  color: #666;
+  font-weight: 600;
+}
+
+.balanceVal {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-pink);
+}
+
+.valInInr {
+  font-size: 11px;
+  color: #777;
+  font-weight: 600;
+}
+
+/* Tabs */
+.tabsRow {
+  display: flex;
+  gap: 16px;
+  border-bottom: 2px solid #efefef;
+  padding-bottom: 2px;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #777;
+  padding: 12px 20px;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.tabActive {
+  color: var(--primary-pink);
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--primary-pink);
+  border-radius: 2px;
+}
+
+.tabContent {
+  padding: 40px;
+  min-height: 350px;
+}
+
+@media (max-width: 768px) {
+  .tabContent {
+    padding: 24px 16px;
+  }
+}
+
+/* Tab Content — Coins Ledger & Rules layout */
+.coinsTab {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+}
+
+@media (max-width: 768px) {
+  .coinsTab {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+
+.ledgerWrap h3,
+.rulesWrap h3,
+.referContent h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary-pink);
+  padding-left: 12px;
+}
+
+.ledgerList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.ledgerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background-color: #fafafa;
+  border: 1px solid #efefef;
+  border-radius: 10px;
+}
+
+.logDesc {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logDate {
+  font-size: 11px;
+  color: #999;
+}
+
+.logAmt {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.creditAmt {
+  color: var(--whatsapp-green);
+}
+
+.debitAmt {
+  color: var(--primary-pink);
+}
+
+.rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ruleItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: #fafafa;
+  border: 1px solid #efefef;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.ruleCoins {
+  font-weight: 600;
+}
+
+.ruleArrow {
+  color: #bbb;
+}
+
+.ruleDisc {
+  font-weight: 700;
+  color: var(--primary-pink);
+}
+
+.noteText {
+  font-size: 12px;
+  color: #777;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* Tab Content — Referral Layout */
+.referContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.referDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.linkBox {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.linkInput {
+  flex-grow: 1;
+  padding: 14px;
+  border: 2px solid #efefef;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  font-size: 14px;
+  color: #555;
+  outline: none;
+}
+
+.shareButtons {
+  margin-top: 10px;
+  display: flex;
+  gap: 16px;
+}
+
+.shareButtons a {
+  width: 100%;
+  padding: 14px;
+}
+
+.referStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.statBox {
+  padding: 20px;
+  text-align: center;
+  background-color: #fafafa;
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statVal {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-pink);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #777;
+  font-weight: 600;
+}
+
+.logoutBtnBox {
+  display: flex;
+  justify-content: center;
+}
+
+.logoutBtn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.logoutBtn:hover {
+  color: var(--primary-pink);
+  text-decoration: underline;
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C2185B" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#FCE4EC" stop-opacity="0.5" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C2185B" />
+      <stop offset="100%" stop-color="#880e4f" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Card -->
+  <rect width="400" height="500" rx="16" fill="url(#pinkGrad)" />
+  <rect width="398" height="498" x="1" y="1" rx="15" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2" />
+  
+  <!-- Stylized Hanger & Suit Outline -->
+  <g transform="translate(100, 110)">
+    <!-- Hanger Hook -->
+    <path d="M100,20 C100,0 80,0 80,20 C80,30 100,35 100,50" fill="none" stroke="url(#accentGrad)" stroke-width="4" stroke-linecap="round" />
+    <!-- Hanger Triangle -->
+    <path d="M50,70 L150,70 L100,50 Z" fill="none" stroke="url(#accentGrad)" stroke-width="4" stroke-linejoin="round" />
+    
+    <!-- Anarkali / Salwar Suit Dress Body -->
+    <path d="M85,73 L115,73 L125,120 L160,180 L130,220 L165,310 L35,310 L70,220 L40,180 L75,120 Z" fill="url(#accentGrad)" opacity="0.85" />
+    
+    <!-- Gold / Accent Neckline border -->
+    <path d="M85,73 C90,85 110,85 115,73" fill="none" stroke="#FFD700" stroke-width="3" />
+    
+    <!-- Gold dupatta drape outline -->
+    <path d="M50,110 Q20,180 55,270 Q60,290 50,310" fill="none" stroke="#FFD700" stroke-width="3" stroke-linecap="round" opacity="0.9" />
+  </g>
+  
+  <!-- Text Logo Overlay -->
+  <text x="200" y="450" font-family="'Poppins', sans-serif" font-size="14" font-weight="600" fill="#C2185B" text-anchor="middle" letter-spacing="1">THE MODERN SUIT HUB</text>
+  <text x="200" y="470" font-family="'Poppins', sans-serif" font-size="11" font-weight="400" fill="#1A1A1A" opacity="0.6" text-anchor="middle">Ghar baithe try karo, dil se pasand karo</text>
+</svg>

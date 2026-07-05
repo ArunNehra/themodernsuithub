@@ -1,0 +1,229 @@
+.page {
+  padding: 60px 0 100px;
+  background: linear-gradient(135deg, #fdf6f7 0%, var(--light-pink) 100%);
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+}
+
+.teaserCard {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 50px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}
+
+@media (max-width: 580px) {
+  .teaserCard {
+    padding: 30px 20px;
+    gap: 25px;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.contestBadge {
+  display: inline-block;
+  background-color: var(--primary-pink);
+  color: var(--white);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--dark-text);
+}
+
+.tagline {
+  font-size: 16px;
+  font-style: italic;
+  color: #666;
+  max-width: 500px;
+}
+
+/* Countdown Grid */
+.countdownGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.timeBox {
+  background-color: var(--white);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 10px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeVal {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary-pink);
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .timeVal {
+    font-size: 26px;
+  }
+}
+
+.timeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+}
+
+/* Prizes and Highlights list */
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoSection h3 {
+  font-size: 18px;
+  font-weight: 700;
+  border-left: 4px solid var(--primary-pink);
+  padding-left: 12px;
+  text-align: left;
+}
+
+.prizesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.prizeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .prizeItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+  }
+}
+
+.rank {
+  font-weight: 700;
+  color: var(--dark-text);
+  min-width: 120px;
+}
+
+.reward {
+  font-weight: 700;
+  color: var(--primary-pink);
+  flex-grow: 1;
+  text-align: left;
+}
+
+.cond {
+  font-size: 12px;
+  color: #777;
+  font-weight: 500;
+}
+
+/* Notify Form */
+.formSection {
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.notifyForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notifyForm p {
+  font-size: 14px;
+  color: #555;
+}
+
+.inputWrap {
+  display: flex;
+  gap: 10px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .inputWrap {
+    flex-direction: column;
+  }
+}
+
+.inputWrap input {
+  flex-grow: 1;
+  padding: 14px 20px;
+  border: 2px solid #efefef;
+  border-radius: 50px;
+  font-size: 15px;
+  outline: none;
+  background-color: var(--white);
+  transition: var(--transition-smooth);
+}
+
+.inputWrap input:focus {
+  border-color: var(--primary-pink);
+}
+
+.inputWrap button {
+  padding: 14px 28px;
+}
+
+/* Success State styling */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.successIcon {
+  font-size: 40px;
+}
+
+.successState h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--whatsapp-green);
+}
+
+.successState p {
+  font-size: 13px;
+  color: #777;
+}

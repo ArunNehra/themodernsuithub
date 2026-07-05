@@ -1,0 +1,209 @@
+.mobileToggleBtn {
+  display: none;
+  width: 100%;
+  padding: 14px;
+  background-color: var(--light-pink);
+  border: 1px solid rgba(194, 24, 91, 0.2);
+  color: var(--primary-pink);
+  font-weight: 600;
+  border-radius: 10px;
+  font-size: 15px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.activeDot {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary-pink);
+  border-radius: 50%;
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: var(--white);
+  border-right: 1px solid #efefef;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #efefef;
+}
+
+.header h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  color: var(--primary-pink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clearBtn:hover {
+  text-decoration: underline;
+}
+
+.closeBtn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--dark-text);
+  font-weight: 500;
+}
+
+.checkboxLabel input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-pink);
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.colorDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.colorDot:hover {
+  transform: scale(1.1);
+}
+
+.selectedColor::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Specific text color for White color selection dot checkmark */
+[aria-label="Select White"]::after {
+  color: var(--dark-text);
+}
+
+.mobileFooter {
+  display: none;
+}
+
+.overlay {
+  display: none;
+}
+
+/* Responsive Drawer Styles */
+@media (max-width: 768px) {
+  .mobileToggleBtn {
+    display: flex;
+    margin-bottom: 24px;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    z-index: 1005;
+    background-color: var(--white);
+    padding: 30px 20px;
+    border-right: none;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .open {
+    left: 0;
+  }
+
+  .closeBtn {
+    display: block;
+  }
+
+  .mobileFooter {
+    display: block;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #efefef;
+  }
+
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1001;
+  }
+}

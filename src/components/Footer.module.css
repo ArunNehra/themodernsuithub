@@ -1,0 +1,157 @@
+.footer {
+  background-color: #121212;
+  color: #c4c4c4;
+  padding: 70px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 60px;
+  padding-bottom: 50px;
+}
+
+@media (max-width: 991px) {
+  .container {
+    grid-template-columns: 1.5fr 1fr 1.2fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+}
+
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  object-fit: contain;
+}
+
+.brandName {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--primary-pink);
+  font-weight: 500;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.colTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.colTitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background-color: var(--primary-pink);
+}
+
+.linksCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link {
+  font-size: 14px;
+  transition: var(--transition-smooth);
+}
+
+.link:hover {
+  color: var(--primary-pink);
+  padding-left: 5px;
+}
+
+.contactCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contactList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.contactList .icon {
+  font-size: 16px;
+}
+
+.contactList .text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.socials {
+  margin-top: 24px;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--white);
+  transition: var(--transition-smooth);
+}
+
+.socialLink:hover {
+  background-color: var(--primary-pink);
+  transform: translateY(-2px);
+}
+
+.bottomBar {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #777;
+}

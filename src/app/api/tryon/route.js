@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { Client, handle_file } from '@gradio/client';
 
 export async function POST(req) {
+  let clothUrl = null;
   try {
     const formData = await req.formData();
     const personImage = formData.get('personImage');
-    const clothUrl = formData.get('clothUrl');
+    clothUrl = formData.get('clothUrl');
 
     if (!personImage || !clothUrl) {
       return NextResponse.json({ error: 'Missing personImage or clothUrl' }, { status: 400 });
@@ -25,11 +26,18 @@ export async function POST(req) {
     const arrayBuffer = await personImage.arrayBuffer();
     const fileBlob = new Blob([arrayBuffer], { type: personImage.type });
 
+    // Create a dummy 1x1 black PNG mask layer to avoid IndexError and trigger the server's automasker
+    const dummyPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    const maskBuffer = Buffer.from(dummyPngBase64, 'base64');
+    const maskBlob = new Blob([maskBuffer], { type: 'image/png' });
+
     // Call prediction using index arrays
     const result = await client.predict("submit_function", [
       {
         background: handle_file(fileBlob),
-        layers: [],
+        layers: [
+          handle_file(maskBlob)
+        ],
         composite: null
       },
       handle_file(clothUrl),
@@ -48,6 +56,18 @@ export async function POST(req) {
     }
   } catch (err) {
     console.error('Server API Try-On error:', err);
+    
+    // Allow manual mock simulation if explicitly configured in environment variables
+    if (process.env.MOCK_TRYON === 'true') {
+      console.log('[MOCK TRYON ACTIVE] Returning clothUrl as mock result.');
+      return NextResponse.json({ 
+        success: true, 
+        image: clothUrl, 
+        isMock: true, 
+        message: 'Mock response due to MOCK_TRYON environment variable override.' 
+      });
+    }
+
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

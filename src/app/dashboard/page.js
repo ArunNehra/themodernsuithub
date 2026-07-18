@@ -159,13 +159,20 @@ export default function Dashboard() {
     alert('Referral link copy ho gaya hai! WhatsApp ya Instagram par share karein.');
   };
 
-  // Coin Value mapping
+  const getVipLevel = (refs) => {
+    if (refs >= 10) return { name: '💫 Trendsetter', discount: 'Extra 10% Off', icon: '💫', next: 'Style Icon (Top 3 in Quarter)' };
+    if (refs >= 5) return { name: '⭐ Style Seeker', discount: 'Extra 5% Off', icon: '⭐', next: 'Trendsetter (10 Refers)' };
+    return { name: '🌱 Newcomer', discount: '50 Welcome Coins', icon: '🌱', next: 'Style Seeker (5 Refers)' };
+  };
+  const vipLevel = getVipLevel(userData.total_referrals || 0);
+
+  // Coin Value mapping (updated: 100 coins = 40 INR discount value, min order 1000)
   const coinRules = [
-    { coins: 50, discount: 25 },
-    { coins: 100, discount: 50 },
-    { coins: 200, discount: 100 },
-    { coins: 500, discount: 300 },
-    { coins: 1000, discount: 700 }
+    { coins: 50, discount: 20 },
+    { coins: 100, discount: 40 },
+    { coins: 200, discount: 80 },
+    { coins: 500, discount: 200 },
+    { coins: 1000, discount: 400 }
   ];
 
   return (
@@ -180,7 +187,7 @@ export default function Dashboard() {
                 <div className={styles.loginHeader}>
                   <span className={styles.loginIcon}>🪙</span>
                   <h2>Coins Dashboard Login</h2>
-                  <p>Apna phone number register karke <strong>50 Welcome Coins (₹25 discount)</strong> paayein.</p>
+                  <p>Apna phone number register karke <strong>50 Welcome Coins (₹20 discount value)</strong> paayein.</p>
                 </div>
                 
                 <form onSubmit={handleLoginSubmit} className={styles.loginForm}>
@@ -273,13 +280,14 @@ export default function Dashboard() {
                 <span className={styles.userAvatar}>👤</span>
                 <div>
                   <h2>Namaste, {userData.name}!</h2>
-                  <p>WhatsApp ID: +91 {userData.phone}</p>
+                  <p style={{ margin: '3px 0' }}>WhatsApp ID: +91 {userData.phone}</p>
+                  <span className={styles.vipBadge}>VIP Club Level: <strong>{vipLevel.name}</strong> ({vipLevel.discount})</span>
                 </div>
               </div>
               <div className={styles.balanceBox}>
                 <span className={styles.balanceLabel}>Coin Balance:</span>
                 <span className={styles.balanceVal}>🪙 {userData.coin_balance}</span>
-                <span className={styles.valInInr}>≈ ₹{userData.coin_balance / 2} Discount Value</span>
+                <span className={styles.valInInr}>≈ ₹{Math.floor(userData.coin_balance * 0.4)} Discount Value (Min. Order ₹1000)</span>
               </div>
             </div>
 
@@ -299,7 +307,15 @@ export default function Dashboard() {
                 type="button"
                 id="tab-refer-btn"
               >
-                🔗 Refer & Earn (₹100 Off)
+                🔗 Refer & Earn
+              </button>
+              <button 
+                className={`${styles.tabBtn} ${activeTab === 'vip' ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab('vip')}
+                type="button"
+                id="tab-vip-btn"
+              >
+                👑 Brand Partner Levels
               </button>
             </div>
 
@@ -307,21 +323,54 @@ export default function Dashboard() {
               {/* Tab A: COINS DATA */}
               {activeTab === 'coins' && (
                 <div className={styles.coinsTab}>
-                  {/* Ledger logs */}
+                  {/* Ledger logs & Earning Guide */}
                   <div className={styles.ledgerWrap}>
-                    <h3>Coins History</h3>
-                    <div className={styles.ledgerList}>
-                      {userData.history.map(log => (
-                        <div key={log.id} className={styles.ledgerItem}>
-                          <div>
-                            <p className={styles.logDesc}>{log.desc}</p>
-                            <span className={styles.logDate}>{log.date}</span>
+                    <div style={{ marginBottom: '35px' }}>
+                      <h3>Coins History</h3>
+                      <div className={styles.ledgerList}>
+                        {userData.history.map(log => (
+                          <div key={log.id} className={styles.ledgerItem}>
+                            <div>
+                              <p className={styles.logDesc}>{log.desc}</p>
+                              <span className={styles.logDate}>{log.date}</span>
+                            </div>
+                            <span className={`${styles.logAmt} ${log.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
+                              {log.type === 'credit' ? '+' : '-'}{log.amount}
+                            </span>
                           </div>
-                          <span className={`${styles.logAmt} ${log.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
-                            {log.type === 'credit' ? '+' : '-'}{log.amount}
-                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className={styles.earningWrap}>
+                      <h3>Coins Kaise Milenge 🪙</h3>
+                      <div className={styles.earningList}>
+                        <div className={styles.earningHeader}>
+                          <span>Kaam (Action)</span>
+                          <span>Coins</span>
+                          <span>Note</span>
                         </div>
-                      ))}
+                        {[
+                          { task: 'Register karo', reward: '50 coins', note: 'Welcome bonus (1-time)' },
+                          { task: 'Pehli purchase', reward: '100 coins', note: 'Sirf pehli purchase pe' },
+                          { task: 'Har ₹500 ki shopping', reward: '50 coins', note: 'Har order par' },
+                          { task: 'Refer & Earn', reward: '100 coins', note: 'Dost ke order par' },
+                          { task: 'Story lagao + tag', reward: '30 coins', note: 'Proof bhejni padegi' },
+                          { task: 'Reel daalo + tag', reward: '50 coins', note: 'Reel link bhejni padegi' },
+                          { task: 'Review + Photo', reward: '25 coins', note: 'Photo zaroori hai' },
+                          { task: 'Birthday bonus', reward: '100 coins', note: 'Har saal automatic' },
+                        ].map((rule, idx) => (
+                          <div key={idx} className={styles.earningRow}>
+                            <span className={styles.earningTask}>{rule.task}</span>
+                            <span className={styles.earningReward}>{rule.reward}</span>
+                            <span className={styles.earningNote}>{rule.note}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className={styles.referWarning}>
+                        ⚠️ <strong>Important Note:</strong> Refer coins sirf tabhi credit honge jab aapke dost ne actual purchase order kiya ho — sirf account join karne pe nahi.
+                      </div>
                     </div>
                   </div>
 
@@ -337,7 +386,7 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
-                    <p className={styles.noteText}>💡 Note: Check-out karte waqt WhatsApp order message mein code select karke automatically discount apply ho jayega. Coins validation shop owner dwara WhatsApp payment verification ke time kiya jata hai.</p>
+                    <p className={styles.noteText}>💡 Note: Check-out karte waqt WhatsApp order message mein code select karke automatically discount apply ho jayega. Coins discount sirf tabhi claim hoga jab aapka order value ₹1000+ ho.</p>
                   </div>
                 </div>
               )}
@@ -376,9 +425,50 @@ export default function Dashboard() {
                         <span className={styles.statLabel}>Successful Refers</span>
                       </div>
                       <div className={styles.statBox}>
-                        <span className={styles.statVal}>🪙 {userData.total_referrals * 150}</span>
+                        <span className={styles.statVal}>🪙 {userData.total_referrals * 100}</span>
                         <span className={styles.statLabel}>Referral Coins Earned</span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab C: BRAND PARTNER VIP CLUB */}
+              {activeTab === 'vip' && (
+                <div className={styles.vipTab}>
+                  <div className={styles.vipContent}>
+                    <h3>Brand Partner System 👑</h3>
+                    <p className={styles.vipDesc}>
+                      Aap jaise active customers ko hum banate hain apna brand partner! Aapka level referrals aur purchases ke basis par badhta hai:
+                    </p>
+
+                    <div className={styles.vipTableList}>
+                      <div className={styles.vipTableHeader}>
+                        <span>Level</span>
+                        <span>Kaise Bano (Goal)</span>
+                        <span>Reward</span>
+                        <span>Duration</span>
+                      </div>
+                      {[
+                        { lvl: '🌱 Newcomer', goal: 'Register karo', reward: '50 welcome coins', dur: 'Always' },
+                        { lvl: '⭐ Style Seeker', goal: '3 purchases ya 5 refers', reward: 'Extra 5% off', dur: 'Active status' },
+                        { lvl: '💫 Trendsetter', goal: '10 refers ya 1000 views', reward: 'Extra 10% off', dur: 'Active status' },
+                        { lvl: '🔥 Style Icon', goal: 'Quarter mein Top 3', reward: '15% off + Website Feature', dur: 'Quarter bhar' },
+                        { lvl: '👑 Brand Partner', goal: 'Quarter mein #1', reward: '20% off + Free suit/month + Hall of Fame', dur: 'Quarterly' }
+                      ].map((vip, i) => (
+                        <div key={i} className={`${styles.vipTableRow} ${vipLevel.name.includes(vip.lvl.split(' ')[1]) ? styles.activeVipRow : ''}`}>
+                          <span className={styles.vipLvlCol}>{vip.lvl}</span>
+                          <span className={styles.vipGoalCol}>{vip.goal}</span>
+                          <span className={styles.vipRewardCol}>{vip.reward}</span>
+                          <span className={styles.vipDurCol}>{vip.dur}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className={styles.progressCard}>
+                      <h4>Aapki current status:</h4>
+                      <p>Level: <strong>{vipLevel.name}</strong></p>
+                      <p>Next target: <strong>{vipLevel.next}</strong></p>
                     </div>
                   </div>
                 </div>

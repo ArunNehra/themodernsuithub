@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getCatalog } from '@/lib/supabase';
+import { getCatalog, getUserProfile, updateUserCoins } from '@/lib/supabase';
 import styles from './page.module.css';
 
 function VirtualTryOnContent() {
@@ -100,6 +100,74 @@ function VirtualTryOnContent() {
       return;
     }
 
+    // 1. Enforce Try-On daily limit check (3 Free Try-Ons)
+    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    let tryonDate = localStorage.getItem('msh_tryon_date');
+    let tryonCount = parseInt(localStorage.getItem('msh_tryon_count') || '0', 10);
+
+    if (tryonDate !== today) {
+      tryonDate = today;
+      tryonCount = 0;
+      localStorage.setItem('msh_tryon_date', today);
+      localStorage.setItem('msh_tryon_count', '0');
+    }
+
+    const isLoggedIn = !!localStorage.getItem('msh_user_phone');
+    let isExtraPayNeeded = tryonCount >= 3;
+    let userPhone = localStorage.getItem('msh_user_phone');
+
+    if (isExtraPayNeeded) {
+      if (!isLoggedIn) {
+        alert('Aapki daily 3 free try-ons ki limit khatam ho gayi hai. Kripya My Account page par register/login karein aur extra try-ons ke liye coins use karein!');
+        setIsFallback(true);
+        return;
+      }
+
+      // Check user coins balance from Supabase
+      setIsProcessing(true);
+      setLoadingProgress(5);
+      try {
+        const profileRes = await getUserProfile(userPhone);
+        if (!profileRes.success || !profileRes.user) {
+          throw new Error('User profile fetch failed');
+        }
+
+        const balance = profileRes.user.coin_balance;
+        if (balance < 50) {
+          alert(`Aapki daily 3 free try-ons khatam ho gayi hain aur aapke paas 50 coins nahi hain. (Coin balance: 🪙 ${balance})\n\nCoins earn karne ke liye orders place karein ya saheliyon ko refer karein! Tab tak aap manually WhatsApp pe generate karwa sakte hain.`);
+          setIsFallback(true);
+          setIsProcessing(false);
+          return;
+        }
+
+        const proceed = confirm(`Aapne aaj ki 3 free try-ons use kar li hain. Kya aap 50 coins deduct karke 1 extra try-on generate karna chahte hain?\n\nYour Current Balance: 🪙 ${balance} coins`);
+        if (!proceed) {
+          setIsProcessing(false);
+          return;
+        }
+
+        // Deduct 50 coins
+        const newBalance = balance - 50;
+        const historyLog = {
+          id: 'debit-' + Date.now(),
+          desc: 'Used 50 coins for 1 extra virtual try-on',
+          amount: 50,
+          type: 'debit',
+          date: new Date().toLocaleDateString('en-IN')
+        };
+        const updateRes = await updateUserCoins(userPhone, newBalance, historyLog);
+        if (!updateRes.success) {
+          throw new Error('Coin deduction failed: ' + updateRes.error);
+        }
+        
+        alert(`🪙 50 coins successfully deduct ho gaye hain! Processing your extra try-on...`);
+      } catch (err) {
+        alert('Coin deduction failed: ' + err.message);
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     setIsProcessing(true);
     setLoadingProgress(10);
     setIsFallback(false);
@@ -132,6 +200,11 @@ function VirtualTryOnContent() {
 
       if (json.success && json.image) {
         setResultImage(json.image);
+        
+        // If they did not pay extra (it was a free one), increment their daily count
+        if (!isExtraPayNeeded) {
+          localStorage.setItem('msh_tryon_count', String(tryonCount + 1));
+        }
       } else {
         throw new Error('Invalid response structure');
       }
@@ -368,6 +441,32 @@ function VirtualTryOnContent() {
               </div>
             </div>
 
+            {/* Section 3: Try-On Rules */}
+            <div className={styles.sectionGroup}>
+              <h3>3. Try-On Rules & Structure</h3>
+              <div className={styles.rulesList}>
+                <div className={styles.ruleRowHeader}>
+                  <span>Situation</span>
+                  <span>Extra Try-on</span>
+                  <span>Cost</span>
+                </div>
+                {[
+                  { sit: 'Roz — bilkul free', qty: '3 try-ons', cost: '₹0 (Free)' },
+                  { sit: '50 coins use karo', qty: '+1 extra', cost: '50 coins' },
+                  { sit: 'Purchase suit', qty: '+1 extra', cost: '₹0 (Included)' },
+                  { sit: 'Story lagao aaj', qty: '+2 extra', cost: 'Marketing code' },
+                  { sit: 'Reel daalo aaj', qty: '+3 extra', cost: 'Marketing code' },
+                ].map((r, idx) => (
+                  <div key={idx} className={styles.ruleRow}>
+                    <span className={styles.ruleSit}>{r.sit}</span>
+                    <span className={styles.ruleQty}>{r.qty}</span>
+                    <span className={styles.ruleCost}>{r.cost}</span>
+                  </div>
+                ))}
+              </div>
+              <p className={styles.resetNote}>💡 Note: Daily 3 free try-ons automatically midnight (raat 12 baje) ke baad reset ho jate hain.</p>
+            </div>
+
             {/* Run Button */}
             <div className={styles.actionBox}>
               <button 
@@ -378,7 +477,7 @@ function VirtualTryOnContent() {
               >
                 {isProcessing ? 'AI Processing...' : '🪞 Try Suit Now'}
               </button>
-              <p className={styles.rateLimitNote}>Guest limits: 2 try-ons/day. Register to get 10 try-ons.</p>
+              <p className={styles.rateLimitNote}>Daily Limit: 3 Free Try-Ons/day. Resets at Midnight.</p>
             </div>
           </div>
         </div>

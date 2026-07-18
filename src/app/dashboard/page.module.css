@@ -404,3 +404,191 @@
   color: var(--primary-pink);
   text-decoration: underline;
 }
+
+/* Coins Earning list table styles */
+.earningWrap {
+  margin-top: 30px;
+}
+
+.earningList {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white);
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.earningHeader {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
+  padding: 14px 18px;
+  background-color: var(--primary-pink);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.earningRow {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+  align-items: center;
+}
+
+.earningRow:last-child {
+  border-bottom: none;
+}
+
+.earningRow:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.earningTask {
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+.earningReward {
+  font-weight: 700;
+  color: var(--whatsapp-green);
+}
+
+.earningNote {
+  color: #777;
+  font-size: 12px;
+}
+
+.referWarning {
+  margin-top: 15px;
+  padding: 12px 18px;
+  background-color: #fff9e6;
+  border-left: 4px solid #ffcc00;
+  border-radius: 6px;
+  color: #775500;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* VIP tab content layout */
+.vipContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vipDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.vipTableList {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white);
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-top: 10px;
+}
+
+.vipTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr 0.8fr;
+  padding: 14px 18px;
+  background-color: var(--primary-pink);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vipTableRow {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr 0.8fr;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+  align-items: center;
+  transition: var(--transition-smooth);
+}
+
+.vipTableRow:last-child {
+  border-bottom: none;
+}
+
+.vipTableRow:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.activeVipRow {
+  background-color: var(--light-pink) !important;
+  border-left: 4px solid var(--primary-pink);
+  font-weight: 600;
+}
+
+.vipLvlCol {
+  font-weight: 700;
+  color: var(--dark-text);
+}
+
+.vipGoalCol {
+  color: #444;
+}
+
+.vipRewardCol {
+  font-weight: 600;
+  color: var(--primary-pink);
+}
+
+.vipDurCol {
+  color: #777;
+  font-size: 12px;
+}
+
+.progressCard {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fafafa;
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.progressCard h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary-pink);
+  margin-bottom: 10px;
+}
+
+.progressCard p {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.progressCard p:last-child {
+  margin-bottom: 0;
+}
+
+/* User Level Badge Styles */
+.vipBadge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  background-color: var(--light-pink);
+  color: var(--primary-pink);
+  border-radius: 20px;
+  font-weight: 600;
+  border: 1px solid rgba(194, 24, 91, 0.15);
+}
